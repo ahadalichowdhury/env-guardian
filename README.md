@@ -1,17 +1,26 @@
 # EnvGuardian (ConfigSync Pro)
 
+**Languages:** [English](#english) · [বাংলা](#bangla)
+
 Secure CLI for managing `.env` files — validate keys, encrypt secrets, block git leaks, detect drift, and share env files safely with your team.
 
 **Install:** [crates.io/crates/env-guardian](https://crates.io/crates/env-guardian) · **Repo:** [github.com/ahadalichowdhury/env-guardian](https://github.com/ahadalichowdhury/env-guardian)
 
 Two binaries ship in one package: `env-guardian` and `config-sync` (same tool, use either).
 
+```bash
+env-guardian --help    # full command list
+config-sync --help     # same tool, alias binary
+```
+
 ---
 
-## What does it do?
+## English
 
-| Problem | EnvGuardian solution |
-|---------|----------------------|
+### What does it do?
+
+| Problem | Solution |
+|---------|----------|
 | Missing env keys in `.env` | `check` compares `.env` vs `.env.example` |
 | Secrets used in code but not defined | `check` scans your codebase |
 | Accidentally committing `.env` to git | `hook install` blocks commits |
@@ -19,312 +28,259 @@ Two binaries ship in one package: `env-guardian` and `config-sync` (same tool, u
 | Local vs server config mismatch | `drift check` |
 | Multiple environments (dev/staging/prod) | `-p development` profile flag |
 
----
+### Prerequisites
 
-## Prerequisites
+| Method | Requirement |
+|--------|-------------|
+| `cargo install` | [Rust](https://rustup.rs) + `~/.cargo/bin` in PATH |
+| Binary download | No Rust required |
+| `hook install` | Git repo (`git init`) |
+| Drift (Vercel) | `VERCEL_TOKEN` env var |
+| Drift (AWS) | AWS CLI + credentials |
 
-| Install method | You need |
-|----------------|----------|
-| `cargo install` | [Rust](https://rustup.rs) (`cargo` on PATH) |
-| Binary download | Nothing (no Rust required) |
-| `hook install` | Git repo (`git init` in project) |
-| `drift` (Vercel) | `VERCEL_TOKEN` environment variable |
-| `drift` (AWS) | AWS CLI + credentials configured |
+### Installation
 
----
-
-## Installation
-
-### Option A — cargo install (recommended)
+**Option A — cargo install (recommended)**
 
 ```bash
 cargo install env-guardian
+export PATH="$HOME/.cargo/bin:$PATH"   # add to ~/.zshrc if needed
 env-guardian --version
 ```
 
-Requires Rust. Installs `env-guardian` and `config-sync` to `~/.cargo/bin` — ensure that directory is in your PATH.
+**Option B — Download binary**
 
-### Option B — Download binary (no Rust)
+1. [GitHub Releases](https://github.com/ahadalichowdhury/env-guardian/releases)
+2. Pick your platform:
 
-1. Go to [GitHub Releases](https://github.com/ahadalichowdhury/env-guardian/releases)
-2. Download the file for your platform:
+| Platform | File |
+|----------|------|
+| Mac (Apple Silicon) | `env-guardian-*-aarch64-apple-darwin.tar.gz` |
+| Mac (Intel) | `env-guardian-*-x86_64-apple-darwin.tar.gz` |
+| Linux | `env-guardian-*-x86_64-unknown-linux-gnu.tar.gz` |
+| Windows | `env-guardian-*-x86_64-pc-windows-msvc.zip` |
 
-| Platform | File name |
-|----------|-----------|
-| Mac (Apple Silicon) | `env-guardian-0.1.0-aarch64-apple-darwin.tar.gz` |
-| Mac (Intel) | `env-guardian-0.1.0-x86_64-apple-darwin.tar.gz` |
-| Linux | `env-guardian-0.1.0-x86_64-unknown-linux-gnu.tar.gz` |
-| Windows | `env-guardian-0.1.0-x86_64-pc-windows-msvc.zip` |
-
-3. Extract and run:
-
-**macOS / Linux:**
 ```bash
-tar -xzf env-guardian-0.1.0-aarch64-apple-darwin.tar.gz
-cd env-guardian-0.1.0-aarch64-apple-darwin
-./env-guardian --version
-# Optional: add to PATH permanently
-export PATH="$PWD:$PATH"
+tar -xzf env-guardian-*-aarch64-apple-darwin.tar.gz
+export PATH="$PWD/env-guardian-*-aarch64-apple-darwin:$PATH"
+env-guardian --version
 ```
 
-**Windows (PowerShell):**
-```powershell
-Expand-Archive env-guardian-0.1.0-x86_64-pc-windows-msvc.zip
-cd env-guardian-0.1.0-x86_64-pc-windows-msvc
-.\env-guardian.exe --version
-```
-
-### Option C — Build from source
+**Option C — From source**
 
 ```bash
 git clone https://github.com/ahadalichowdhury/env-guardian.git
-cd env-guardian
-cargo install --path .
+cd env-guardian && cargo install --path .
 ```
 
----
-
-## Quick start (first project)
-
-Run these inside your project folder:
+### Quick start
 
 ```bash
-# 1. Create config + example templates
-env-guardian init --with-example --with-profiles
-
-# 2. Create your local .env from the example
-cp .env.example .env
-
-# 3. Edit .env — fill in real values (DATABASE_URL, API_KEY, etc.)
-#    Use your editor: nano .env  OR  env-guardian tui
-
-# 4. Validate everything matches
+cd your-project
+env-guardian init --with-example
+cp .env.example .env          # skip if .env already exists
+# fill in real values in .env
 env-guardian check
-
-# 5. Block accidental .env commits (requires git)
-git init
-env-guardian hook install
-
-# 6. (Optional) Add CI check on GitHub
-env-guardian ci install
+git init && env-guardian hook install
 ```
 
-**Files created by `init`:**
+| File | Commit to git? |
+|------|----------------|
+| `.envguardian.toml` | Yes |
+| `.env.example` | Yes |
+| `.env` | **Never** |
+| `.env.enc` | Yes (encrypted) |
 
-| File | Commit to git? | Purpose |
-|------|----------------|---------|
-| `.envguardian.toml` | Yes | Tool configuration |
-| `.env.example` | Yes | Template (no secrets) |
-| `.env` | **Never** | Your real secrets |
-| `.env.enc` | Yes (optional) | Encrypted backup |
-
----
-
-## Everyday commands
-
-### Check env consistency
+### Common commands
 
 ```bash
-env-guardian check                    # default profile
-env-guardian check -p development     # specific profile
-env-guardian check --strict           # warnings = fail (use in CI)
-env-guardian check --no-scan          # skip codebase scan
-```
-
-Exit code `0` = pass, `1` = fail (use in scripts/CI).
-
-### Encrypt / decrypt (local vault)
-
-```bash
-env-guardian encrypt                  # .env → .env.enc (prompts for master password)
-env-guardian decrypt                  # .env.enc → .env
-
-env-guardian encrypt -p production    # profile-specific files
-```
-
-Keep your master password safe — it cannot be recovered.
-
-### Interactive editor (TUI)
-
-```bash
-env-guardian tui
-env-guardian tui -p staging
-```
-
-| Key | Action |
-|-----|--------|
-| `j` / `k` or ↑/↓ | Navigate variables |
-| `Enter` | Edit selected value |
-| `n` | New key |
-| `d` | Delete key |
-| `p` | Switch profile |
-| `c` | Run check |
-| `q` | Quit |
-
-### Profiles (dev / staging / production)
-
-```bash
-env-guardian check -p development
-env-guardian encrypt -p production
-env-guardian decrypt -p production
-```
-
-| Profile | Env file | Encrypted file |
-|---------|----------|----------------|
-| `default` | `.env` | `.env.enc` |
-| `development` | `.env.development` | `.env.development.enc` |
-| `staging` | `.env.staging` | `.env.staging.enc` |
-| `production` | `.env.production` | `.env.production.enc` |
-
----
-
-## Team sharing (zero-knowledge)
-
-Secrets are encrypted for the recipient only — no server sees plaintext.
-
-```bash
-# Step 1: Each person generates keys once
-env-guardian share keygen -o ./keys
-# Share: keys/env-guardian.pub  (public)
-# Keep secret: keys/env-guardian.key  (never commit!)
-
-# Step 2: Sender encrypts for recipient
-env-guardian share create \
-  --recipient ./teammate.env-guardian.pub \
-  -p production \
-  -o production.share
-
-# Step 3: Send production.share via Slack/email
-
-# Step 4: Recipient decrypts
-env-guardian share open \
-  --share production.share \
-  --key ./keys/env-guardian.key \
-  --output .env.production
-```
-
----
-
-## Drift detection
-
-Compare local `.env` with a remote source:
-
-```bash
-# Save snapshot for later comparison / CI
-env-guardian drift snapshot -o .envguardian.snapshot
-
-# Compare local vs snapshot
+env-guardian check                    # validate keys
+env-guardian check --strict           # CI mode (warnings = fail)
+env-guardian check -p production      # profile
+env-guardian encrypt / decrypt        # local vault
+env-guardian tui                      # interactive editor
+env-guardian hook install             # block .env commits
+env-guardian ci install               # GitHub Actions workflow
 env-guardian drift check --snapshot .envguardian.snapshot
-
-# Compare vs another file
-env-guardian drift check --remote-env ./server-backup.env
-
-# Compare vs Vercel
-export VERCEL_TOKEN=your_token
-env-guardian drift check --vercel-project YOUR_PROJECT_ID
-
-# Compare vs AWS SSM (requires AWS CLI)
-env-guardian drift check --aws-ssm-path /myapp/prod/ --aws-region us-east-1
+env-guardian share keygen -o ./keys
 ```
 
----
-
-## CI / GitHub Actions
+### Help
 
 ```bash
-env-guardian ci install    # creates .github/workflows/env-guardian.yml
-env-guardian ci print      # preview workflow YAML
+env-guardian --help
+env-guardian check --help
+env-guardian drift check --help
+env-guardian share create --help
 ```
 
-The workflow runs `env-guardian check --strict --no-scan` on every push and PR.
+### Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| `command not found` | `export PATH="$HOME/.cargo/bin:$PATH"` |
+| `check` MISSING keys | Add keys from `.env.example` to `.env` |
+| `check` EXTRA keys | Add keys from `.env` to `.env.example` |
+| `not a git repository` | Run `git init` before `hook install` |
+| `decryption failed` | Wrong master password |
 
 ---
 
-## Git pre-commit hook
+## বাংলা
 
-```bash
-git init
-env-guardian hook install
-```
+### এটি কী করে?
 
-Blocks commits that include plaintext `.env` files. Allows `.env.example` and `.env.enc`.
+| সমস্যা | সমাধান |
+|--------|--------|
+| `.env`-এ key মিসিং | `check` — `.env` ও `.env.example` মিলায় |
+| কোডে ব্যবহৃত secret define নেই | `check` — কোডবেস স্ক্যান |
+| ভুলবশত `.env` git-তে commit | `hook install` — commit ব্লক |
+| টিমমেটের সাথে secret শেয়ার | `share create` — E2E এনক্রিপ্ট |
+| লোকাল vs সার্ভার config আলাদা | `drift check` |
+| dev / staging / prod এনভায়রনমেন্ট | `-p development` profile |
 
-```bash
-env-guardian hook uninstall   # remove hook
-```
+### প্রয়োজনীয়তা
 
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| `command not found: env-guardian` | Run `cargo install env-guardian` or add binary folder to PATH |
-| `not a git repository` (hook) | Run `git init` first |
-| `check` fails with MISSING | Add missing keys to `.env` (see `.env.example`) |
-| `decryption failed` | Wrong master password or corrupted `.env.enc` |
-| `VERCEL_TOKEN required` | `export VERCEL_TOKEN=...` before drift check |
-| Hook blocks `.env.example` | Should not happen — file a bug if it does |
-
----
-
-## বাংলা — দ্রুত গাইড
+| পদ্ধতি | কী লাগবে |
+|--------|---------|
+| `cargo install` | Rust + PATH-এ `~/.cargo/bin` |
+| Binary download | Rust লাগবে না |
+| `hook install` | Git repo |
+| Drift (Vercel) | `VERCEL_TOKEN` |
+| Drift (AWS) | AWS CLI |
 
 ### ইনস্টল
 
 ```bash
 cargo install env-guardian
+
+# PATH সেট (Mac/Linux) — স্থায়ী করতে ~/.zshrc-তে যোগ করুন
+export PATH="$HOME/.cargo/bin:$PATH"
+env-guardian --version
 ```
 
-### প্রজেক্ট সেটআপ
+Binary: [GitHub Releases](https://github.com/ahadalichowdhury/env-guardian/releases) থেকে ডাউনলোড করুন।
+
+### দ্রুত শুরু
 
 ```bash
-env-guardian init --with-example --with-profiles
-cp .env.example .env
-# .env ফাইলে সিক্রেট ভরুন
+cd your-project
+env-guardian init --with-example
+cp .env.example .env          # .env নেই তাহলে
+# .env-তে real values ভরুন
 env-guardian check
+git init && env-guardian hook install
 ```
+
+| ফাইল | Git-তে commit? |
+|------|----------------|
+| `.envguardian.toml` | হ্যাঁ |
+| `.env.example` | হ্যাঁ |
+| `.env` | **কখনো না** |
+| `.env.enc` | হ্যাঁ (এনক্রিপ্টেড) |
+
+### `check` ফেইল হলে কী করবেন?
+
+| Output | মানে | করণীয় |
+|--------|------|--------|
+| **MISSING** | `.env.example`-এ আছে, `.env`-এ নেই | `.env`-তে key যোগ করুন |
+| **EXTRA** | `.env`-এ আছে, `.env.example`-এ নেই | `.env.example`-তে key যোগ করুন |
+| **EMPTY** | key আছে, value খালি | value ভরুন |
 
 ### মূল কমান্ড
 
-| কমান্ড | কাজ |
-|--------|-----|
-| `env-guardian check` | `.env` ও `.env.example` মিলানো |
-| `env-guardian encrypt` | `.env` এনক্রিপ্ট → `.env.enc` |
-| `env-guardian decrypt` | `.env.enc` ডিক্রিপ্ট → `.env` |
-| `env-guardian tui` | টার্মিনালে এডিটর |
-| `env-guardian hook install` | git-এ `.env` কমিট ব্লক |
-| `env-guardian share keygen` | শেয়ারিং কী বানানো |
-| `env-guardian drift check` | লোকাল vs সার্ভার অসঙ্গতি |
+```bash
+env-guardian check                    # key মিলানো
+env-guardian check --strict           # CI — warning-ও fail
+env-guardian check -p production      # প্রোফাইল
+env-guardian encrypt                  # .env → .env.enc
+env-guardian decrypt                  # .env.enc → .env
+env-guardian tui                      # ইন্টারেক্টিভ এডিটর
+env-guardian hook install             # .env commit ব্লক
+env-guardian ci install               # GitHub Actions
+env-guardian drift check --snapshot .envguardian.snapshot
+env-guardian share keygen -o ./keys   # E2E শেয়ারিং কী
+```
+
+### Help দেখুন
+
+```bash
+env-guardian --help
+config-sync --help          # একই টুল
+env-guardian check --help
+env-guardian encrypt --help
+```
+
+### সাধারণ সমস্যা
+
+| সমস্যা | সমাধান |
+|--------|--------|
+| `command not found` | `export PATH="$HOME/.cargo/bin:$PATH"` |
+| `check` fail — MISSING | `.env`-তে key যোগ করুন |
+| `check` fail — EXTRA | `.env.example`-তে key যোগ করুন |
+| `not a git repository` | `git init` চালান |
+| `decryption failed` | ভুল master password |
 
 ### গুরুত্বপূর্ণ নিয়ম
 
-- `.env` **কখনো git-তে commit করবেন না**
-- `.env.example` commit করা নিরাপদ (সিক্রেট নেই)
+- `.env` **কখনো** git-তে commit করবেন না
+- `.env.example` commit করা নিরাপদ
 - `.env.enc` commit করা নিরাপদ (এনক্রিপ্টেড)
-- `env-guardian.key` কখনো শেয়ার করবেন না
+- `env-guardian.key` **কখনো** শেয়ার করবেন না
 
 ---
 
-## All commands
+## All commands (English + বাংলা)
 
-| Command | Description |
-|---------|-------------|
-| `env-guardian init` | Create `.envguardian.toml` |
-| `env-guardian init --with-example` | Also create `.env.example` |
-| `env-guardian init --with-profiles` | Create dev/staging/prod templates |
-| `env-guardian check` | Validate keys + codebase scan |
-| `env-guardian encrypt` / `decrypt` | Local AES-256-GCM vault |
-| `env-guardian hook install` | Git pre-commit hook |
-| `env-guardian tui` | Interactive terminal UI |
-| `env-guardian ci install` | GitHub Actions workflow |
-| `env-guardian drift check` | Detect config drift |
-| `env-guardian drift snapshot` | Save env snapshot |
-| `env-guardian share keygen` | Generate E2E keypair |
-| `env-guardian share create` | Encrypt file for teammate |
-| `env-guardian share open` | Decrypt received share |
+| Command | English | বাংলা |
+|---------|---------|-------|
+| `init` | Setup project config | প্রজেক্ট সেটআপ |
+| `check` | Validate `.env` keys | key মিলানো |
+| `encrypt` | Lock `.env` as `.env.enc` | এনক্রিপ্ট |
+| `decrypt` | Restore `.env` from `.env.enc` | ডিক্রিপ্ট |
+| `hook install` | Block `.env` git commits | git leak বন্ধ |
+| `tui` | Interactive terminal editor | টার্মিনাল এডিটর |
+| `ci install` | GitHub Actions workflow | CI সেটআপ |
+| `drift check` | Compare local vs remote | drift চেক |
+| `drift snapshot` | Save env snapshot | snapshot সেভ |
+| `share keygen` | Generate E2E keypair | কী জেনারেট |
+| `share create` | Encrypt for teammate | টিমমেটের জন্য এনক্রিপ্ট |
+| `share open` | Decrypt received share | share ডিক্রিপ্ট |
 
-Global option: `--root <path>` — project directory (default: current folder).
+Global: `--root <path>` — project folder (default: current directory)
+
+### Profiles
+
+| Profile | Env file | Encrypted |
+|---------|----------|-----------|
+| `default` | `.env` | `.env.enc` |
+| `development` | `.env.development` | `.env.development.enc` |
+| `staging` | `.env.staging` | `.env.staging.enc` |
+| `production` | `.env.production` | `.env.production.enc` |
+
+### TUI keys
+
+| Key | English | বাংলা |
+|-----|---------|-------|
+| `j` / `k` | Navigate | উপর / নিচ |
+| `Enter` | Edit value | এডিট |
+| `n` | New key | নতুন key |
+| `d` | Delete key | ডিলিট |
+| `p` | Switch profile | প্রোফাইল বদল |
+| `c` | Run check | চেক |
+| `q` | Quit | বের হন |
+
+---
+
+## Team sharing (E2E)
+
+```bash
+env-guardian share keygen -o ./keys
+env-guardian share create --recipient teammate.pub -p production -o prod.share
+env-guardian share open --share prod.share --key ./keys/env-guardian.key -o .env.production
+```
+
+টিমমেটের সাথে `prod.share` ফাইল পাঠান — শুধু recipient-ের private key দিয়ে খুলা যাবে।
 
 ---
 
