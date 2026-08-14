@@ -63,15 +63,15 @@ jobs:
 
       - name: Package (Windows)
         if: matrix.archive == 'zip'
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          PKG="env-guardian-${VERSION}-${{ matrix.target }}"
-          mkdir -p "dist/${PKG}"
-          cp "target/${{ matrix.target }}/release/env-guardian.exe" "dist/${PKG}/"
-          cp "target/${{ matrix.target }}/release/config-sync.exe" "dist/${PKG}/"
-          cd dist && zip -r "${PKG}.zip" "${PKG}"
-          echo "ASSET=dist/${PKG}.zip" >> "$GITHUB_ENV"
+          $version = "$env:GITHUB_REF_NAME" -replace '^v', ''
+          $pkg = "env-guardian-$version-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force -Path "dist/$pkg" | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/env-guardian.exe" "dist/$pkg/"
+          Copy-Item "target/${{ matrix.target }}/release/config-sync.exe" "dist/$pkg/"
+          Compress-Archive -Path "dist/$pkg" -DestinationPath "dist/$pkg.zip" -Force
+          "ASSET=dist/$pkg.zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: actions/upload-artifact@v4
         with:
