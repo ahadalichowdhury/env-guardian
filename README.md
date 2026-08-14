@@ -36,7 +36,7 @@ env-guardian --version
 From GitHub (before crates.io):
 
 ```bash
-cargo install env-guardian --git https://github.com/YOUR_USERNAME/env-guardian --tag v0.1.0
+cargo install env-guardian --git https://github.com/ahadalichowdhury/env-guardian.git --tag v0.1.0
 ```
 
 ### Option 2 — Download binary (no Rust needed)
@@ -54,13 +54,14 @@ env-guardian --version
 ### Option 3 — Homebrew (optional, after tap setup)
 
 ```bash
-brew install YOUR_USERNAME/tap/env-guardian
+brew install ahadalichowdhury/tap/env-guardian
+
 ```
 
 ## Install (build from source)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/env-guardian
+git clone https://github.com/ahadalichowdhury/env-guardian.git
 cd env-guardian
 cargo install --path .
 ```
