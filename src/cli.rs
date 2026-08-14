@@ -208,7 +208,7 @@ pub enum ShareCommands {
         input: Option<PathBuf>,
 
         /// Output share package path
-        #[arg(long)]
+        #[arg(long, short)]
         output: Option<PathBuf>,
     },
 
@@ -223,7 +223,7 @@ pub enum ShareCommands {
         key: PathBuf,
 
         /// Output decrypted file path
-        #[arg(long)]
+        #[arg(long, short)]
         output: Option<PathBuf>,
     },
 }
