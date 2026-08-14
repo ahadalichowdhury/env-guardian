@@ -1,6 +1,6 @@
 [package]
 name = "env-guardian"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Secure CLI for .env management — validation, encryption, drift detection, and team sharing"
 license = "MIT"
