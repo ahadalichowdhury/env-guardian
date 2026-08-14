@@ -1,0 +1,47 @@
+[project]
+name = "envconfig"
+default_profile = "default"
+
+[files]
+env = ".env"
+env_example = ".env.example"
+encrypted = ".env.enc"
+
+[scan]
+enabled = true
+include = [
+    "src",
+    "app",
+    "lib",
+]
+exclude = [
+    "node_modules",
+    "target",
+    "dist",
+    ".git",
+    "vendor",
+]
+patterns = [
+    "process.env",
+    "os.getenv",
+    "std::env::var",
+]
+
+[encryption]
+algorithm = "AES-256-GCM"
+kdf = "argon2id"
+
+[profiles.development]
+env = ".env.development"
+env_example = ".env.example.development"
+encrypted = ".env.development.enc"
+
+[profiles.production]
+env = ".env.production"
+env_example = ".env.example.production"
+encrypted = ".env.production.enc"
+
+[profiles.staging]
+env = ".env.staging"
+env_example = ".env.example.staging"
+encrypted = ".env.staging.enc"

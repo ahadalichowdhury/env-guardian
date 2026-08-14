@@ -1,0 +1,46 @@
+[package]
+name = "env-guardian"
+version = "0.1.0"
+edition = "2021"
+description = "Secure CLI for .env management — validation, encryption, drift detection, and team sharing"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/YOUR_USERNAME/env-guardian"
+homepage = "https://github.com/YOUR_USERNAME/env-guardian"
+documentation = "https://github.com/YOUR_USERNAME/env-guardian#readme"
+keywords = ["env", "dotenv", "cli", "secrets", "security", "devops"]
+categories = ["command-line-utilities", "development-tools"]
+authors = ["EnvGuardian Contributors"]
+
+[[bin]]
+name = "env-guardian"
+path = "src/main.rs"
+
+[[bin]]
+name = "config-sync"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+aes-gcm = "0.10"
+argon2 = "0.5"
+base64 = "0.22"
+rand = "0.8"
+walkdir = "2"
+ignore = "0.4"
+regex = "1"
+owo-colors = "4"
+rpassword = "7"
+thiserror = "1"
+ratatui = "0.29"
+crossterm = "0.28"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hkdf = "0.12"
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"
